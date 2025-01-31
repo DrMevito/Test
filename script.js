@@ -1,4 +1,4 @@
-const BASE_URL = "https://test-152h.onrender.com"; // Replace with your Render URL
+const BASE_URL = "https://test-r1wz.onrender.com"; // Replace with your Render URL
 
 async function searchSongs() {
     const query = document.getElementById("searchQuery").value;
