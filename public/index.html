@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Music Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <h1>YouTube Music Player</h1>
+
+    <div class="search-container">
+        <input type="text" id="searchQuery" placeholder="Search for a song...">
+        <button onclick="searchMusic()">🔍 Search</button>
+    </div>
+
+    <div id="musicList"></div>
+
+    <div class="player">
+        <button id="playPauseBtn" onclick="togglePlayPause()">▶️ Play</button>
+        <audio id="audioPlayer" ontimeupdate="updateProgressBar()" onended="resetPlayer()"></audio>
+    </div>
+
+    <div id="progressBar">
+        <div id="progressFill"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
