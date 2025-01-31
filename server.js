@@ -1,12 +1,11 @@
 const express = require("express");
-const YouTubeMusic = require("node-youtube-music");
+const ytSearch = require("yt-search");
 const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors()); // Allow frontend access
-app.use(express.static("public")); // Serve frontend files
+app.use(cors());
 
 app.get("/search", async (req, res) => {
     const query = req.query.q;
@@ -15,9 +14,19 @@ app.get("/search", async (req, res) => {
     }
 
     try {
-        const results = await YouTubeMusic.searchMusics(query);
-        res.json(results);
+        const searchResults = await ytSearch(query);
+        const songs = searchResults.videos
+            .filter(video => video.duration.seconds > 0) // Only fetch songs
+            .map(video => ({
+                title: video.title,
+                youtubeId: video.videoId,
+                duration: video.timestamp,
+                thumbnail: video.thumbnail
+            }));
+
+        res.json(songs);
     } catch (error) {
+        console.error("Error fetching music data:", error);
         res.status(500).json({ error: "Failed to fetch music data" });
     }
 });
