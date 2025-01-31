@@ -1,36 +1,75 @@
 const express = require("express");
-const ytSearch = require("yt-search");
 const cors = require("cors");
+const ytSearch = require("yt-search");
+const ytdl = require("@distube/ytdl-core");
+const ffmpeg = require("fluent-ffmpeg");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
 app.use(cors());
 
+// 🔍 Search only MP3 (music) and filter out videos
 app.get("/search", async (req, res) => {
-    const query = req.query.q;
-    if (!query) {
-        return res.status(400).json({ error: 'Query parameter "q" is required' });
-    }
-
     try {
-        const searchResults = await ytSearch(query);
-        const songs = searchResults.videos
-            .filter(video => video.duration.seconds > 0) // Only fetch songs
-            .map(video => ({
-                title: video.title,
-                youtubeId: video.videoId,
-                duration: video.timestamp,
-                thumbnail: video.thumbnail
-            }));
+        const query = req.query.q;
+        if (!query) return res.status(400).send("Query is required");
+
+        console.log("Searching for:", query);
+
+        const result = await ytSearch(query);
+        const songs = result.videos.filter(video =>
+            video.title.toLowerCase().includes("official audio") || 
+            video.title.toLowerCase().includes("lyrics") || 
+            video.title.toLowerCase().includes("song")
+        );
 
         res.json(songs);
     } catch (error) {
-        console.error("Error fetching music data:", error);
-        res.status(500).json({ error: "Failed to fetch music data" });
+        console.error("Search Error:", error.message);
+        res.status(500).send("Error fetching search results");
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+// 🎵 Stream YouTube audio in real-time with low latency
+const { PassThrough } = require("stream");
+
+app.get("/stream", async (req, res) => {
+    try {
+        const videoUrl = req.query.url;
+        if (!videoUrl) return res.status(400).send("URL is required");
+
+        console.log("Streaming:", videoUrl);
+
+        res.setHeader("Content-Type", "audio/mpeg");
+        res.setHeader("Transfer-Encoding", "chunked");
+
+        // Fetch lowest quality audio for instant playback
+        const stream = ytdl(videoUrl, {
+            filter: "audioonly",
+            quality: "lowestaudio", // Use lowest quality to reduce data
+            dlChunkSize: 1024 * 512, // Reduce chunk size for real-time streaming
+            highWaterMark: 1024 * 256, // Lower buffer to avoid pre-downloading
+        });
+
+        const passThrough = new PassThrough();
+        stream.pipe(passThrough); // Stream audio without waiting
+
+        passThrough.pipe(res, { end: true });
+
+        // Stop the stream if the client disconnects
+        res.on("close", () => {
+            console.log("Client disconnected, stopping stream...");
+            passThrough.destroy();
+        });
+
+    } catch (error) {
+        console.error("Streaming Error:", error.message);
+        if (!res.headersSent) res.status(500).send("Error streaming audio");
+    }
 });
+
+
+
+
+// Start server
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

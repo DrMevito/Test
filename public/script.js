@@ -1,58 +1,38 @@
-const apiUrl = "/search";
-let currentAudio = document.getElementById("audioPlayer");
-const progressFill = document.getElementById("progressFill");
-const playPauseBtn = document.getElementById("playPauseBtn");
-let currentTrack = null;
-
-async function searchMusic() {
+async function searchSongs() {
     const query = document.getElementById("searchQuery").value;
-    const response = await fetch(`${apiUrl}?q=${encodeURIComponent(query)}`);
-    const data = await response.json();
+    if (!query) return alert("Enter a search term!");
 
-    const musicList = document.getElementById("musicList");
-    musicList.innerHTML = "";
+    const response = await fetch(`http://localhost:3000/search?q=${encodeURIComponent(query)}`);
+    const songs = await response.json();
 
-    data.forEach(item => {
-        const songElement = document.createElement("div");
-        songElement.classList.add("song");
-        songElement.innerText = item.title;
-        songElement.onclick = () => playMusic(item);
-        musicList.appendChild(songElement);
+    const resultsList = document.getElementById("results");
+    resultsList.innerHTML = "";
+
+    songs.forEach(song => {
+        const li = document.createElement("li");
+        li.innerHTML = `<button onclick="playSong('${song.url}')">${song.title}</button>`;
+        resultsList.appendChild(li);
     });
 }
 
-function playMusic(track) {
-    if (currentTrack && currentTrack.youtubeId === track.youtubeId) {
-        togglePlayPause();
-        return;
-    }
+async function playSong(url) {
+    console.log("Playing song:", url);
+    const player = document.getElementById("player");
 
-    currentTrack = track;
-    currentAudio.src = `https://www.youtube.com/watch?v=${track.youtubeId}`;
-    currentAudio.play();
-    playPauseBtn.innerText = "⏸️ Pause";
+    player.src = `http://localhost:3000/stream?url=${encodeURIComponent(url)}`;
+    player.play().catch(error => console.error("Playback error:", error));
 }
 
-function togglePlayPause() {
-    if (!currentAudio.src) return;
+// Update progress bar
+const player = document.getElementById("player");
+player.addEventListener("timeupdate", () => {
+    const progress = document.getElementById("progress");
+    progress.value = (player.currentTime / player.duration) * 100;
+});
 
-    if (currentAudio.paused) {
-        currentAudio.play();
-        playPauseBtn.innerText = "⏸️ Pause";
-    } else {
-        currentAudio.pause();
-        playPauseBtn.innerText = "▶️ Play";
-    }
-}
-
-function updateProgressBar() {
-    if (!currentAudio.duration) return;
-
-    const progressPercent = (currentAudio.currentTime / currentAudio.duration) * 100;
-    progressFill.style.width = `${progressPercent}%`;
-}
-
-function resetPlayer() {
-    playPauseBtn.innerText = "▶️ Play";
-    progressFill.style.width = "0%";
+// Seek function to jump to a specific time
+function seek(event) {
+    const progress = document.getElementById("progress");
+    const seekTime = (event.target.value / 100) * player.duration;
+    player.currentTime = seekTime;
 }

@@ -1,66 +1,13 @@
 body {
     font-family: Arial, sans-serif;
     text-align: center;
-    background-color: #121212;
-    color: white;
-    padding: 20px;
 }
-
-.search-container {
-    margin: 20px 0;
-}
-
-input {
-    padding: 10px;
-    width: 300px;
-    border: none;
-    border-radius: 5px;
-}
-
-button {
-    padding: 10px 15px;
-    background-color: #1db954;
-    border: none;
-    color: white;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-}
-
-#musicList {
+#results {
     margin-top: 20px;
 }
-
 .song {
-    background-color: #333;
-    padding: 10px;
-    margin: 5px auto;
-    width: 50%;
     cursor: pointer;
-    border-radius: 5px;
-}
-
-.song:hover {
-    background-color: #444;
-}
-
-.player {
-    margin-top: 20px;
-}
-
-/* Progress Bar */
-#progressBar {
-    width: 50%;
-    height: 10px;
-    background: #444;
-    margin: 20px auto;
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-#progressFill {
-    height: 100%;
-    width: 0%;
-    background: #1db954;
-    transition: width 0.5s linear;
+    margin: 5px;
+    padding: 10px;
+    border: 1px solid #ccc;
 }
